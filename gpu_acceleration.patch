@@ -1,0 +1,118 @@
+diff --git a/source/xatlas/xatlas.cpp b/source/xatlas/xatlas.cpp
+--- a/source/xatlas/xatlas.cpp
++++ b/source/xatlas/xatlas.cpp
+@@ -28,8 +28,12 @@ Copyright NVIDIA Corporation 2006 -- Ignacio Castano <icastano@nvidia.com>
+ MIT License
+ Copyright (c) 2012 Brandon Pelfrey
+ */
++
+ #include "xatlas.h"
++#if XA_GPU_ACCELERATION
++#include "xatlas_gpu.h"
++#endif
++
+ #ifndef XATLAS_C_API
+ #define XATLAS_C_API 0
+ #endif
+@@ -12651,6 +12655,28 @@ namespace xatlas
+ 
+ 									static bool computeLeastSquaresConformalMap(Mesh *mesh)
+ 									{
++#if XA_GPU_ACCELERATION
++										// If GPU acceleration available, try it
++										if (gpu::isGpuAvailable()) {
++											Array<uint32_t> faces;
++											faces.resize(mesh->faceCount() * 3);
++											for (uint32_t i = 0; i < mesh->faceCount(); i++) {
++												for (uint32_t j = 0; j < 3; j++) {
++													faces[i * 3 + j] = mesh->vertexAt(i * 3 + j);
++												}
++											}
++											Array<Vector2> texcoords;
++											texcoords.resize(mesh->vertexCount());
++											if (gpu::computeLSCM(mesh, faces, texcoords)) {
++												// Copy results back to mesh
++												for (uint32_t i = 0; i < mesh->vertexCount(); i++) {
++													mesh->texcoord(i) = texcoords[i];
++												}
++												return true;
++											}
++											// Fall back to CPU implementation if GPU fails
++										}
++#endif
++
+ 										uint32_t lockedVertex0, lockedVertex1;
+ 										if (!findApproximateDiameterVertices(mesh, &lockedVertex0, &lockedVertex1))
+ 										{
+@@ -13546,7 +13572,26 @@ namespace xatlas
+ 													{
+ 														options.paramFunc(&m_unifiedMesh->position(0).x, &m_unifiedMesh->texcoord(0).x, m_unifiedMesh->vertexCount(), m_unifiedMesh->indices().data, m_unifiedMesh->indexCount());
+ 													}
+-													else
++													else 
++													{
++#if XA_GPU_ACCELERATION
++														// Try GPU acceleration if enabled in options
++														if (options.useGPU) {
++															Array<uint32_t> faces;
++															Array<Vector2> gpuTexcoords;
++															faces.resize(m_unifiedMesh->faceCount() * 3);
++															for (uint32_t i = 0; i < m_unifiedMesh->faceCount(); i++) {
++																for (uint32_t j = 0; j < 3; j++) {
++																	faces[i * 3 + j] = m_unifiedMesh->vertexAt(i * 3 + j);
++																}
++															}
++															
++															if (gpu::computeLSCM(m_unifiedMesh, faces, gpuTexcoords)) {
++																// Copy texcoords back to mesh
++																for (uint32_t i = 0; i < m_unifiedMesh->vertexCount(); i++) {
++																	m_unifiedMesh->texcoord(i) = gpuTexcoords[i];
++																}
++															} else {
++#endif
+ 														computeLeastSquaresConformalMap(m_unifiedMesh);
++#if XA_GPU_ACCELERATION
++															}
++														} else {
++															computeLeastSquaresConformalMap(m_unifiedMesh);
++														}
++#endif
++													}
+ 													XA_PROFILE_END(parameterizeChartsLSCM)
+ 													XA_PROFILE_START(parameterizeChartsEvaluateQuality)
+ 													m_quality.computeBoundaryIntersection(m_unifiedMesh, boundaryGrid);
+diff --git a/source/xatlas/xatlas.h b/source/xatlas/xatlas.h
+--- a/source/xatlas/xatlas.h
++++ b/source/xatlas/xatlas.h
+@@ -27,6 +27,11 @@ SOFTWARE.
+ */
+ #pragma once
+ #ifndef XATLAS_H
++#define XATLAS_H
++
++// Options for GPU acceleration
++#ifndef XA_GPU_ACCELERATION
++#define XA_GPU_ACCELERATION 0
+ #endif
+ 
+ namespace xatlas
+@@ -179,6 +184,7 @@ namespace xatlas
+ 
+ 		bool useInputMeshUvs = false; // Use MeshDecl::vertexUvData for charts.
+ 		bool fixWinding = false;	  // Enforce consistent texture coordinate winding.
++		bool useGPU = false; // Use GPU acceleration when available
+ 	};
+ 
+ 	// Call after all AddMesh calls. Can be called multiple times to recompute charts with different options.
+@@ -245,4 +251,11 @@ namespace xatlas
+ 	const char *StringForEnum(AddMeshError error);
+ 	const char *StringForEnum(ProgressCategory category);
+ 
++#if XA_GPU_ACCELERATION
++	namespace gpu {
++		bool isGpuAvailable();
++		void shutdown();
++	}
++#endif
++
+ } // namespace xatlas

@@ -4,19 +4,31 @@
 
 xatlas is a small C++11 library with no external dependencies that generates unique texture coordinates suitable for baking lightmaps or texture painting.
 
-It is an independent fork of [thekla_atlas](https://github.com/Thekla/thekla_atlas), used by [The Witness](https://en.wikipedia.org/wiki/The_Witness_(2016_video_game)).
+It is an independent fork of [thekla_atlas](https://github.com/Thekla/thekla_atlas), used by [The Witness](<https://en.wikipedia.org/wiki/The_Witness_(2016_video_game)>).
+
+### New: GPU Acceleration
+
+This fork adds GPU acceleration for UV unwrapping using CUDA. The LSCM parameterization can now be performed on the GPU, resulting in significant performance improvements for large meshes. See [GPU_ACCELERATION.md](GPU_ACCELERATION.md) for more details.
+
+```
+xatlas::ChartOptions chartOptions;
+chartOptions.useGPU = true; // Enable GPU acceleration
+```
 
 ## Screenshots
 
 #### Example - [Cesium Milk Truck](https://github.com/KhronosGroup/glTF-Sample-Models)
-| Viewer | Random packing | Brute force packing |
-|---|---|---|
+
+| Viewer                                                                                                                                                                                                                | Random packing                                                                                                         | Brute force packing                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | [![Viewer](https://user-images.githubusercontent.com/3744372/69908461-48cace80-143e-11ea-8b73-efea5a9f036e.png)](https://user-images.githubusercontent.com/3744372/69908460-48323800-143e-11ea-8b18-58087493c8e9.png) | ![Random packing](https://user-images.githubusercontent.com/3744372/68638607-d4db8b80-054d-11ea-8238-845d94789a2d.gif) | ![Brute force packing](https://user-images.githubusercontent.com/3744372/68638614-da38d600-054d-11ea-82d9-43e558c46d50.gif) |
 
 #### Example - [Godot Third Person Shooter demo](https://github.com/godotengine/tps-demo)
+
 [![Godot TPS](https://user-images.githubusercontent.com/3744372/69908463-48cace80-143e-11ea-8035-b669d1a455f6.png)](https://user-images.githubusercontent.com/3744372/69908462-48cace80-143e-11ea-8946-a2c596ec8028.png)
 
 #### [Graphite/Geogram](http://alice.loria.fr/index.php?option=com_content&view=article&id=22)
+
 ![Graphite/Geogram](https://user-images.githubusercontent.com/19478253/69903392-c0deb900-1398-11ea-8a52-c211bc7803a9.gif)
 
 ## How to use
@@ -92,7 +104,7 @@ B. Lévy, S. Petitjean, N. Ray, and J. Maillot. [Least Squares Conformal Maps fo
 
 O. Sorkine, D. Cohen-Or, R. Goldenthal, and D. Lischinski. [Bounded-distortion Piecewise Mesh Parameterization](https://igl.ethz.ch/projects/parameterization/BDPMP/index.php)
 
-Y. O’Donnell. [Precomputed Global Illumination in Frostbite](https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/gdc2018-precomputedgiobalilluminationinfrostbite.pdf)
+Y. O'Donnell. [Precomputed Global Illumination in Frostbite](https://media.contentapi.ea.com/content/dam/eacom/frostbite/files/gdc2018-precomputedgiobalilluminationinfrostbite.pdf)
 
 ## Used by
 
