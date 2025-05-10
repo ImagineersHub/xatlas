@@ -16482,6 +16482,23 @@ Copyright (c) 2012 Brandon Pelfrey
 								return "";
 							}
 
+
+#if XA_GPU_ACCELERATION
+namespace gpu {
+
+bool isGpuAvailable() 
+{
+    // Simple stub implementation
+    return false;
+}
+
+void shutdown() 
+{
+    // Simple stub implementation
+}
+
+} // namespace gpu
+#endif
 						} // namespace xatlas
 
 #if XATLAS_C_API
